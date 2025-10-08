@@ -39,39 +39,43 @@ public class DNSMessage {
     }
 
     public byte[] toByteArray() {
-        byte[] arr = new byte[512];
+        byte[] response = new byte[512];
 
         // transaction ID
-        arr[0] = (byte) (transactionId >> 8);
-        arr[1] = (byte) (transactionId & 0xFF);
+        response[0] = (byte) (transactionId >> 8);
+        response[1] = (byte) (transactionId & 0xFF);
 
         // flags
-        arr[2] = (byte) 0b10000000;
+        response[2] = (byte) 0b10000000;
 
         // question count
-        arr[5] = (byte) 1;
+        response[5] = (byte) 1;
 
         // questions
-        byte[] question = getQuestionAsBytes();
-        System.arraycopy(question, 0, arr, 12, question.length);
+        try {
+            byte[] question = getQuestionAsBytes();
+            System.arraycopy(question, 0, response, 12, question.length);
+        } catch (IOException e) {
+            System.out.printf("Could not write question to response: %s%n", e.getMessage());
+        }
 
-        return arr;
+        return response;
     }
 
-    private byte[] getQuestionAsBytes() {
+    private byte[] getQuestionAsBytes() throws IOException {
 
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
         String[] words = question.split("\\.");
 
         for (String word : words) {
             bos.write((byte) word.length());
-            try {
-                bos.write(word.getBytes(StandardCharsets.US_ASCII));
-            } catch (IOException e) {
-                System.out.printf("Could not write word %s to response: %s%n", word, e.getMessage());
-            }
+            bos.write(word.getBytes(StandardCharsets.US_ASCII));
         }
         bos.write((byte) 0);
+
+        // hardcode to RR type A, class IN
+        bos.write(new byte[] {1, 1});
+
         return bos.toByteArray();
     }
 
