@@ -74,7 +74,7 @@ public class DNSMessage {
         bos.write((byte) 0);
 
         // hardcode to RR type A, class IN
-        bos.write(new byte[] {1, 1});
+        bos.write(new byte[] {0, 1, 0, 1});
 
         return bos.toByteArray();
     }
