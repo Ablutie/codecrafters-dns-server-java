@@ -1,7 +1,6 @@
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
-import java.util.BitSet;
 
 public class Main {
   public static void main(String[] args){
@@ -17,6 +16,8 @@ public class Main {
          DNSMessage response = new DNSMessage.Builder()
                  .transactionId(transactionId)
                  .queryIndicator(true)
+                 .questionCount((short) 1)
+                 .question("codecrafters.com")
                  .build();
 
          final byte[] bufResponse = response.toByteArray();
