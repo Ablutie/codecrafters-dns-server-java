@@ -17,7 +17,7 @@ public class Main {
                  .transactionId(transactionId)
                  .queryIndicator(true)
                  .questionCount((short) 1)
-                 .question("codecrafters.com")
+                 .question("codecrafters.io")
                  .build();
 
          final byte[] bufResponse = response.toByteArray();

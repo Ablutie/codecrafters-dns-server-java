@@ -52,13 +52,13 @@ public class DNSMessage {
         arr[5] = (byte) 1;
 
         // questions
-        byte[] question = getquestionAsBytes();
+        byte[] question = getQuestionAsBytes();
         System.arraycopy(question, 0, arr, 12, question.length);
 
         return arr;
     }
 
-    private byte[] getquestionAsBytes() {
+    private byte[] getQuestionAsBytes() {
 
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
         String[] words = question.split("\\.");
