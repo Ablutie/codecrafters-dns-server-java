@@ -18,6 +18,7 @@ public class Main {
                  .queryIndicator(true)
                  .questionCount((short) 1)
                  .question("codecrafters.io")
+                 .answer("codecrafters.io")
                  .build();
 
          final byte[] bufResponse = response.toByteArray();

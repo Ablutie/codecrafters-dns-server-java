@@ -19,6 +19,7 @@ public class DNSMessage {
     private final short additionalRecordCount;
 
     private final String question;
+    private final String answer;
 
     DNSMessage(Builder builder) {
 
@@ -36,6 +37,7 @@ public class DNSMessage {
         this.authorityRecordCount = builder.authorityRecordCount;
         this.additionalRecordCount = builder.additionalRecordCount;
         this.question = builder.question;
+        this.answer = builder.answer;
     }
 
     public byte[] toByteArray() {
@@ -51,10 +53,17 @@ public class DNSMessage {
         // question count
         response[5] = (byte) 1;
 
+        // answer count
+        response[7] = (byte) 1;
+
         // questions
         try {
             byte[] question = getQuestionAsBytes();
             System.arraycopy(question, 0, response, 12, question.length);
+
+            byte[] answer = getAnswerAsBytes();
+            System.arraycopy(answer, 0, response, 12 + question.length, answer.length);
+
         } catch (IOException e) {
             System.out.printf("Could not write question to response: %s%n", e.getMessage());
         }
@@ -79,6 +88,32 @@ public class DNSMessage {
         return bos.toByteArray();
     }
 
+    private byte[] getAnswerAsBytes() throws IOException {
+
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        String[] words = answer.split("\\.");
+
+        for (String word : words) {
+            bos.write((byte) word.length());
+            bos.write(word.getBytes(StandardCharsets.US_ASCII));
+        }
+        bos.write((byte) 0);
+
+        // hardcode to RR type A, class IN
+        bos.write(new byte[] {0, 1, 0, 1});
+
+        // hardcode TTL to 60
+        bos.write(new byte[] {0, 0, 0, 60});
+
+        // hardcode length to 4
+        bos.write(new byte[] {0, 4});
+
+        // hardcode IP to 124.168.0.1
+        bos.write(new byte[] {124, 8, 0, 1});
+
+        return bos.toByteArray();
+    }
+
     public static class Builder {
         private short transactionId;
         private boolean queryIndicator;
@@ -94,6 +129,7 @@ public class DNSMessage {
         private short authorityRecordCount;
         private short additionalRecordCount;
         private String question;
+        private String answer;
         
         public Builder transactionId(short transactionId) {
             this.transactionId = transactionId;
@@ -173,6 +209,11 @@ public class DNSMessage {
 
         public Builder question(String question) {
             this.question = question;
+            return this;
+        }
+
+        public Builder answer(String answer) {
+            this.answer = answer;
             return this;
         }
 
