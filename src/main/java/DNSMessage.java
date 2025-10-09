@@ -7,11 +7,7 @@ public class DNSMessage {
     private final short transactionId;
     private final boolean queryIndicator;
     private final byte opCode;
-    private final boolean authoritativeAnswer;
-    private final boolean truncation;
     private final boolean recursionDesired;
-    private final boolean recursionAvailable;
-    private final byte reserved;
     private final byte responseCode;
     private final short questionCount;
     private final short answerRecordCount;
@@ -26,11 +22,7 @@ public class DNSMessage {
         this.transactionId = builder.transactionId;
         this.queryIndicator = builder.queryIndicator;
         this.opCode = builder.opCode;
-        this.authoritativeAnswer = builder.authoritativeAnswer;
-        this.truncation = builder.truncation;
         this.recursionDesired = builder.recursionDesired;
-        this.recursionAvailable = builder.recursionAvailable;
-        this.reserved = builder.reserved;
         this.responseCode = builder.responseCode;
         this.questionCount = builder.questionCount;
         this.answerRecordCount = builder.answerRecordCount;
@@ -48,7 +40,8 @@ public class DNSMessage {
         response[1] = (byte) (transactionId & 0xFF);
 
         // flags
-        response[2] = (byte) 0b10000000;
+        response[2] = getFirstHeaderByte();
+        response[3] = getSecondHeaderByte();
 
         // question count
         response[5] = (byte) 1;
@@ -69,6 +62,37 @@ public class DNSMessage {
         }
 
         return response;
+    }
+
+    private byte getFirstHeaderByte() {
+        StringBuilder sb = new StringBuilder();
+
+        // QR - true
+        sb.append("1");
+
+        // OPCODE
+        String opCodeBinary = String.format("%4s", Integer.toBinaryString(opCode)).replace(' ', '0');
+        sb.append(opCodeBinary);
+
+        // AA + TC
+        sb.append("00");
+
+        // RD
+        sb.append(recursionDesired ? "1" : "0");
+
+        return Integer.valueOf(sb.toString(), 2).byteValue();
+    }
+
+    private byte getSecondHeaderByte() {
+        StringBuilder sb = new StringBuilder();
+
+        // RA + Z + AD + CD
+        sb.append("0000");
+
+        // RCODE
+        sb.append(opCode == 0 ? "0000" : "0010");
+
+        return Integer.valueOf(sb.toString(), 2).byteValue();
     }
 
     private byte[] getQuestionAsBytes() throws IOException {
@@ -118,11 +142,7 @@ public class DNSMessage {
         private short transactionId;
         private boolean queryIndicator;
         private byte opCode;
-        private boolean authoritativeAnswer;
-        private boolean truncation;
         private boolean recursionDesired;
-        private boolean recursionAvailable;
-        private byte reserved;
         private byte responseCode;
         private short questionCount;
         private short answerRecordCount;
@@ -147,33 +167,9 @@ public class DNSMessage {
             return this;
         }
 
-        public Builder authoritativeAnswer(boolean authoritativeAnswer) {
-
-            this.authoritativeAnswer = authoritativeAnswer;
-            return this;
-        }
-
-        public Builder truncation(boolean truncation) {
-
-            this.truncation = truncation;
-            return this;
-        }
-
         public Builder recursionDesired(boolean recursionDesired) {
 
             this.recursionDesired = recursionDesired;
-            return this;
-        }
-
-        public Builder recursionAvailable(boolean recursionAvailable) {
-
-            this.recursionAvailable = recursionAvailable;
-            return this;
-        }
-
-        public Builder reserved(byte reserved) {
-
-            this.reserved = reserved;
             return this;
         }
 
