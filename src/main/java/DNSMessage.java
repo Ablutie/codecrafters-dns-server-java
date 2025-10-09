@@ -90,7 +90,7 @@ public class DNSMessage {
         sb.append("0000");
 
         // RCODE
-        sb.append(opCode == 0 ? "0000" : "0010");
+        sb.append(opCode == 0 ? "0000" : "0100");
 
         return Integer.valueOf(sb.toString(), 2).byteValue();
     }

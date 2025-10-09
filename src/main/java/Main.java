@@ -23,13 +23,6 @@ public class Main {
      }
   }
 
-  private static short parseTransactionId(byte[] arr) {
-
-      int value = arr[0] & 0xFF;
-      value = (value << 8) + (arr[1] & 0xFF);
-      return (short) value;
-  }
-
   private static DNSMessage parseRequest(byte[] arr) {
 
       int transactionId = arr[0] & 0xFF;
