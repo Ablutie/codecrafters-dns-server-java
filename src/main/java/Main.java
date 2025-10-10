@@ -1,6 +1,7 @@
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
+import java.nio.charset.StandardCharsets;
 
 public class Main {
   public static void main(String[] args){
@@ -32,14 +33,38 @@ public class Main {
       byte opCode = (byte) ((headers1 & 0b01111000) >> 3);
       boolean recursionDesired = ((headers1 & 0b00000001) == 1);
 
+      String domain = parseQuestion(arr);
+
       return new DNSMessage.Builder()
               .transactionId((short) transactionId)
               .queryIndicator(true)
               .opCode(opCode)
               .recursionDesired(recursionDesired)
               .questionCount((short) 1)
-              .question("codecrafters.io")
-              .answer("codecrafters.io")
+              .question(domain)
+              .answer(domain)
               .build();
+  }
+
+  private static String parseQuestion(byte[] arr) {
+      StringBuilder domain = new StringBuilder();
+
+      int currentIndex = 13;
+      byte wordLength = arr[12];
+      while (true) {
+          byte[] wordBytes = new byte[wordLength];
+          System.arraycopy(arr, currentIndex, wordBytes, 0, wordLength);
+          domain.append(new String(wordBytes, StandardCharsets.US_ASCII));
+          currentIndex += wordLength;
+          if (arr[currentIndex] != 0) {
+              wordLength = arr[currentIndex];
+              currentIndex++;
+              domain.append(".");
+          } else {
+              break;
+          }
+      }
+
+      return domain.toString();
   }
 }
