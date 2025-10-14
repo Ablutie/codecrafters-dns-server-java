@@ -1,6 +1,4 @@
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
+import java.util.List;
 
 public class DNSMessage {
 
@@ -8,14 +6,11 @@ public class DNSMessage {
     private final boolean queryIndicator;
     private final byte opCode;
     private final boolean recursionDesired;
-    private final byte responseCode;
-    private final short questionCount;
-    private final short answerRecordCount;
-    private final short authorityRecordCount;
-    private final short additionalRecordCount;
+    private final int questionCount;
+    private final int answerRecordCount;
 
-    private final String question;
-    private final String answer;
+    private final List<String> questions;
+    private final List<String> answers;
 
     DNSMessage(Builder builder) {
 
@@ -23,119 +18,50 @@ public class DNSMessage {
         this.queryIndicator = builder.queryIndicator;
         this.opCode = builder.opCode;
         this.recursionDesired = builder.recursionDesired;
-        this.responseCode = builder.responseCode;
         this.questionCount = builder.questionCount;
         this.answerRecordCount = builder.answerRecordCount;
-        this.authorityRecordCount = builder.authorityRecordCount;
-        this.additionalRecordCount = builder.additionalRecordCount;
-        this.question = builder.question;
-        this.answer = builder.answer;
+        this.questions = builder.questions;
+        this.answers = builder.answers;
     }
 
-    public byte[] toByteArray() {
-        byte[] response = new byte[512];
+    public short getTransactionId() {
 
-        // transaction ID
-        response[0] = (byte) (transactionId >> 8);
-        response[1] = (byte) (transactionId & 0xFF);
-
-        // flags
-        response[2] = getFirstHeaderByte();
-        response[3] = getSecondHeaderByte();
-
-        // question count
-        response[5] = (byte) 1;
-
-        // answer count
-        response[7] = (byte) 1;
-
-        // questions
-        try {
-            byte[] question = getQuestionAsBytes();
-            System.arraycopy(question, 0, response, 12, question.length);
-
-            byte[] answer = getAnswerAsBytes();
-            System.arraycopy(answer, 0, response, 12 + question.length, answer.length);
-
-        } catch (IOException e) {
-            System.out.printf("Could not write question to response: %s%n", e.getMessage());
-        }
-
-        return response;
+        return transactionId;
     }
 
-    private byte getFirstHeaderByte() {
-        StringBuilder sb = new StringBuilder();
+    public boolean isQueryIndicator() {
 
-        // QR - true
-        sb.append("1");
-
-        // OPCODE
-        String opCodeBinary = String.format("%4s", Integer.toBinaryString(opCode)).replace(' ', '0');
-        sb.append(opCodeBinary);
-
-        // AA + TC
-        sb.append("00");
-
-        // RD
-        sb.append(recursionDesired ? "1" : "0");
-
-        return Integer.valueOf(sb.toString(), 2).byteValue();
+        return queryIndicator;
     }
 
-    private byte getSecondHeaderByte() {
-        StringBuilder sb = new StringBuilder();
+    public byte getOpCode() {
 
-        // RA + Z + AD + CD
-        sb.append("0000");
-
-        // RCODE
-        sb.append(opCode == 0 ? "0000" : "0100");
-
-        return Integer.valueOf(sb.toString(), 2).byteValue();
+        return opCode;
     }
 
-    private byte[] getQuestionAsBytes() throws IOException {
+    public boolean isRecursionDesired() {
 
-        ByteArrayOutputStream bos = new ByteArrayOutputStream();
-        String[] words = question.split("\\.");
-
-        for (String word : words) {
-            bos.write((byte) word.length());
-            bos.write(word.getBytes(StandardCharsets.US_ASCII));
-        }
-        bos.write((byte) 0);
-
-        // hardcode to RR type A, class IN
-        bos.write(new byte[] {0, 1, 0, 1});
-
-        return bos.toByteArray();
+        return recursionDesired;
     }
 
-    private byte[] getAnswerAsBytes() throws IOException {
+    public int getQuestionCount() {
 
-        ByteArrayOutputStream bos = new ByteArrayOutputStream();
-        String[] words = answer.split("\\.");
+        return questionCount;
+    }
 
-        for (String word : words) {
-            bos.write((byte) word.length());
-            bos.write(word.getBytes(StandardCharsets.US_ASCII));
-        }
-        bos.write((byte) 0);
+    public int getAnswerRecordCount() {
 
-        // hardcode to RR type A, class IN
-        bos.write(new byte[] {0, 1, 0, 1});
+        return answerRecordCount;
+    }
 
-        // hardcode TTL to 60
-        bos.write(new byte[] {0, 0, 0, 60});
+    public List<String> getQuestions() {
 
-        // hardcode length to 4
-        bos.write(new byte[] {0, 4});
+        return questions;
+    }
 
-        // hardcode IP to 124.168.0.1
-        bos.write(new byte[] {124, 8, 0, 1});
+    public List<String> getAnswers() {
 
-        return bos.toByteArray();
+        return answers;
     }
 
     public static class Builder {
@@ -143,13 +69,10 @@ public class DNSMessage {
         private boolean queryIndicator;
         private byte opCode;
         private boolean recursionDesired;
-        private byte responseCode;
-        private short questionCount;
-        private short answerRecordCount;
-        private short authorityRecordCount;
-        private short additionalRecordCount;
-        private String question;
-        private String answer;
+        private int questionCount;
+        private int answerRecordCount;
+        private List<String> questions;
+        private List<String> answers;
         
         public Builder transactionId(short transactionId) {
             this.transactionId = transactionId;
@@ -173,43 +96,25 @@ public class DNSMessage {
             return this;
         }
 
-        public Builder responseCode(byte responseCode) {
-
-            this.responseCode = responseCode;
-            return this;
-        }
-
-        public Builder questionCount(short questionCount) {
+        public Builder questionCount(int questionCount) {
 
             this.questionCount = questionCount;
             return this;
         }
 
-        public Builder answerRecordCount(short answerRecordCount) {
+        public Builder answerRecordCount(int answerRecordCount) {
 
             this.answerRecordCount = answerRecordCount;
             return this;
         }
 
-        public Builder authorityRecordCount(short authorityRecordCount) {
-
-            this.authorityRecordCount = authorityRecordCount;
+        public Builder questions(List<String> questions) {
+            this.questions = questions;
             return this;
         }
 
-        public Builder additionalRecordCount(short additionalRecordCount) {
-
-            this.additionalRecordCount = additionalRecordCount;
-            return this;
-        }
-
-        public Builder question(String question) {
-            this.question = question;
-            return this;
-        }
-
-        public Builder answer(String answer) {
-            this.answer = answer;
+        public Builder answers(List<String> answers) {
+            this.answers = answers;
             return this;
         }
 
