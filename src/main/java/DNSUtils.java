@@ -69,7 +69,8 @@ public class DNSUtils {
 
             byte currentByte = arr[currentIndex];
             if (currentByte == 0) {
-                questionLength++;
+                // add null length octet and 4 type / class octets
+                questionLength += 5;
                 break;
             } else if (hasPointer(currentByte)) {
                 domain.append(".");
