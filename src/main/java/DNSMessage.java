@@ -10,7 +10,7 @@ public class DNSMessage {
     private final int answerRecordCount;
 
     private final List<String> questions;
-    private final List<String> answers;
+    private final List<Answer> answers;
 
     DNSMessage(Builder builder) {
 
@@ -29,7 +29,7 @@ public class DNSMessage {
         return transactionId;
     }
 
-    public boolean isQueryIndicator() {
+    public boolean isResponse() {
 
         return queryIndicator;
     }
@@ -59,7 +59,7 @@ public class DNSMessage {
         return questions;
     }
 
-    public List<String> getAnswers() {
+    public List<Answer> getAnswers() {
 
         return answers;
     }
@@ -72,7 +72,7 @@ public class DNSMessage {
         private int questionCount;
         private int answerRecordCount;
         private List<String> questions;
-        private List<String> answers;
+        private List<Answer> answers;
         
         public Builder transactionId(short transactionId) {
             this.transactionId = transactionId;
@@ -113,7 +113,7 @@ public class DNSMessage {
             return this;
         }
 
-        public Builder answers(List<String> answers) {
+        public Builder answers(List<Answer> answers) {
             this.answers = answers;
             return this;
         }

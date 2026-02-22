@@ -6,7 +6,7 @@ import java.util.List;
 
 public class DNSUtils {
 
-    public static DNSMessage parseRequest(byte[] arr) {
+    public static DNSMessage parsePacket(byte[] arr, boolean parseAnswer) {
 
         // transaction id
         int transactionId = arr[0] & 0xFF;
@@ -21,8 +21,26 @@ public class DNSUtils {
         int numQuestions = arr[4] & 0xFF;
         numQuestions = (numQuestions << 8) + (arr[5] & 0xFF);
 
+        // number of answers
+        int numAnswers = numQuestions;
+
         // questions
         List<String> questions = parseQuestions(arr, numQuestions);
+
+        // answers
+        List<Answer> answers = questions.stream()
+                .map(Answer::defaultAnswer)
+                .toList();
+
+        if (parseAnswer) {
+            // we only get here if we read a response from the forward server
+            // it is assumed we only ask one question, therefore we only get one answer
+            numAnswers = 1;
+
+            // assumes we only have one question per forwarded request
+            answers = List.of(parseAnswer(arr, questions.getFirst().length()));
+        }
+
 
         return new DNSMessage.Builder()
                 .transactionId((short) transactionId)
@@ -30,9 +48,9 @@ public class DNSUtils {
                 .opCode(opCode)
                 .recursionDesired(recursionDesired)
                 .questionCount(numQuestions)
-                .answerRecordCount(numQuestions)
+                .answerRecordCount(numAnswers)
                 .questions(questions)
-                .answers(questions) // mimic question in answer
+                .answers(answers) // mimic question in answer
                 .build();
     }
 
@@ -48,6 +66,42 @@ public class DNSUtils {
         return questions.stream()
                 .map(Question::question)
                 .toList();
+    }
+
+    private static Answer parseAnswer(byte[] arr, int questionLength) {
+        StringBuilder domain = new StringBuilder();
+
+        int start = 12 + questionLength + 6;
+        int wordLength = arr[start];
+        int currentIndex = start + 1;
+
+        while (true) {
+            byte[] wordBytes = new byte[wordLength];
+            System.arraycopy(arr, currentIndex, wordBytes, 0, wordLength);
+
+            String word = new String(wordBytes, StandardCharsets.US_ASCII);
+            domain.append(word);
+            currentIndex += wordLength;
+
+            int currentByte = arr[currentIndex];
+            if (currentByte == 0) {
+                break;
+            } else {
+                domain.append(".");
+                currentIndex++;
+            }
+        }
+
+        currentIndex += 4;
+        byte[] ttl = new byte[4];
+        System.arraycopy(arr, currentIndex, ttl, 0, 4);
+
+        // move 8 bytes forward - 4 for the TTL and 4 for hardcoded RDLENGTH
+        currentIndex += 8;
+        byte[] ip = new byte[4];
+        System.arraycopy(arr, currentIndex, ip, 0, 4);
+
+        return new Answer(domain.toString(), ttl, ip);
     }
 
     private static Question parseQuestion(byte[] arr, int start) {
@@ -94,34 +148,34 @@ public class DNSUtils {
         return ((octet >> 6) & 0b11) == 3;
     }
 
-  private static int getPointer(byte octet) {
+    private static int getPointer(byte octet) {
         return octet & 0b00111111;
   }
 
-    public static byte[] dnsResponseToByteArray(DNSMessage request) {
+    public static byte[] dnsMessageToByteArray(DNSMessage message) {
         byte[] response = new byte[512];
 
         // transaction ID
-        response[0] = (byte) (request.getTransactionId() >> 8);
-        response[1] = (byte) (request.getTransactionId() & 0xFF);
+        response[0] = (byte) (message.getTransactionId() >> 8);
+        response[1] = (byte) (message.getTransactionId() & 0xFF);
 
         // flags
-        response[2] = getFirstHeaderAsByte(request);
-        response[3] = getSecondHeaderAsByte(request);
+        response[2] = getFirstHeaderAsByte(message);
+        response[3] = getSecondHeaderAsByte(message);
 
         // question count
-        response[5] = (byte) request.getQuestionCount();
+        response[5] = (byte) message.getQuestionCount();
 
         // answer count
-        response[7] = (byte) request.getAnswerRecordCount();
+        response[7] = (byte) message.getAnswerRecordCount();
 
         try {
             // questions
-            byte[] questionSection = getQuestionSectionAsBytes(request);
+            byte[] questionSection = getQuestionSectionAsBytes(message);
             System.arraycopy(questionSection, 0, response, 12, questionSection.length);
 
             // answers
-            byte[] answerSection = getAnswerSectionAsBytes(request);
+            byte[] answerSection = getAnswerSectionAsBytes(message);
             System.arraycopy(answerSection, 0, response, 12 + questionSection.length, answerSection.length);
 
         } catch (IOException e) {
@@ -135,7 +189,7 @@ public class DNSUtils {
         StringBuilder sb = new StringBuilder();
 
         // QR - true
-        sb.append("1");
+        sb.append(message.isResponse() ? "1" : "0");
 
         // OPCODE
         String opCodeBinary = String.format("%4s", Integer.toBinaryString(message.getOpCode())).replace(' ', '0');
@@ -186,8 +240,8 @@ public class DNSUtils {
 
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
 
-        for (String answer : message.getAnswers()) {
-            String[] words = answer.split("\\.");
+        for (Answer answer : message.getAnswers()) {
+            String[] words = answer.resource().split("\\.");
 
             for (String word : words) {
                 bos.write((byte) word.length());
@@ -198,14 +252,12 @@ public class DNSUtils {
             // hardcode to RR type A, class IN
             bos.write(new byte[] {0, 1, 0, 1});
 
-            // hardcode TTL to 60
-            bos.write(new byte[] {0, 0, 0, 60});
+            bos.write(answer.ttl());
 
             // hardcode length to 4
             bos.write(new byte[] {0, 4});
 
-            // hardcode IP to 124.168.0.1
-            bos.write(new byte[] {124, 8, 0, 1});
+            bos.write(answer.ip());
         }
 
         return bos.toByteArray();
