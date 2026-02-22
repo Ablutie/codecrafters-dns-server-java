@@ -35,6 +35,9 @@ public class Main {
 
                 boolean shouldParseAnswer = shouldForward(args);
                 DNSMessage request = DNSUtils.parsePacket(buf, shouldParseAnswer);
+                for (String question : request.getQuestions()) {
+                    System.out.println("Request contains question: " + question);
+                }
 
                 byte[] bufResponse;
 

@@ -52,7 +52,7 @@ public class DNSForwarder {
 
         DNSMessage response = null;
         try(DatagramSocket forwardSocket = new DatagramSocket()) {
-            System.out.println("forwarding request");
+            System.out.println("forwarding request for domain: " + message.getQuestions().getFirst());
 
             final byte[] buf = DNSUtils.dnsMessageToByteArray(message);
 
