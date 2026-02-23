@@ -3,7 +3,6 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class DNSUtils {
 
@@ -319,15 +318,14 @@ public class DNSUtils {
 
     private static byte getSecondHeaderAsByte(DNSMessage message) {
 
-        StringBuilder sb = new StringBuilder();
-
         // RA + Z + AD + CD
-        sb.append("0000");
 
-        // RCODE
-        sb.append(message.getOpCode() == 0 ? "0000" : "0100");
+        String sb = "0000"
 
-        return Integer.valueOf(sb.toString(), 2).byteValue();
+                // RCODE
+                + (message.getOpCode() == 0 ? "0000" : "0100");
+
+        return Integer.valueOf(sb, 2).byteValue();
     }
 
     private static byte[] getQuestionSectionAsBytes(DNSMessage message) throws IOException {
