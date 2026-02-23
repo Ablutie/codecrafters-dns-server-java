@@ -3,6 +3,7 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class DNSForwarder {
@@ -65,8 +66,11 @@ public class DNSForwarder {
             forwardSocket.receive(forwardResponsePacket);
 
             System.out.println("received response from forwarding server");
+            System.out.println("raw forwarding server response: " + Arrays.toString(responseBuf));
             answer = DNSUtils.parseAnswer(responseBuf);
-            System.out.println("answer from forwarding DNS server: " + answer.resource());
+            System.out.println("resource from forwarding DNS server: " + answer.resource());
+            System.out.println("ttl from forwarding DNS server: " + Arrays.toString(answer.ttl()));
+            System.out.println("ip from forwarding DNS server: " + Arrays.toString(answer.ip()));
         } catch (IOException e) {
             System.out.println("exception while forwarding: " + e.getMessage());
         }
