@@ -186,7 +186,7 @@ public class DNSUtils {
         }
 
         // skip TYPE + CLASS - hardcoded to type A + class IN
-        currentIndex += 6;
+        currentIndex += 5;
 
         // TTL has the next 4 bytes
         byte[] ttl = new byte[4];
@@ -249,9 +249,6 @@ public class DNSUtils {
 
         int pointer = firstByte  & 0b00111111;
         return (pointer << 8) + (secondByte & 0xFF);
-
-//        int numQuestions = arr[4] & 0xFF;
-//        numQuestions = (numQuestions << 8) + (arr[5] & 0xFF);
     }
 
     private static int getQuestionOffset(List<Question> questions) {
