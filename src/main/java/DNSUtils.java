@@ -32,16 +32,6 @@ public class DNSUtils {
                 .map(Answer::defaultAnswer)
                 .toList();
 
-        if (parseAnswer) {
-            // we only get here if we read a response from the forward server
-            // it is assumed we only ask one question, therefore we only get one answer
-            numAnswers = 1;
-
-            // assumes we only have one question per forwarded request
-            answers = List.of(parseAnswer(arr, questions.getFirst().length()));
-        }
-
-
         return new DNSMessage.Builder()
                 .transactionId((short) transactionId)
                 .queryIndicator(true)
@@ -68,10 +58,10 @@ public class DNSUtils {
                 .toList();
     }
 
-    private static Answer parseAnswer(byte[] arr, int questionLength) {
+    public static Answer parseAnswer(byte[] arr) {
         StringBuilder domain = new StringBuilder();
 
-        int start = 12 + questionLength + 6;
+        int start = 12;
         int wordLength = arr[start];
         int currentIndex = start + 1;
 
@@ -87,17 +77,21 @@ public class DNSUtils {
             if (currentByte == 0) {
                 break;
             } else {
-                domain.append(".");
+                wordLength = arr[currentIndex];
                 currentIndex++;
+                domain.append(".");
             }
         }
 
+        // skip TYPE + CLASS - hardcoded to type A + class IN
         currentIndex += 4;
+
+        // TTL has the next 4 bytes
         byte[] ttl = new byte[4];
         System.arraycopy(arr, currentIndex, ttl, 0, 4);
 
-        // move 8 bytes forward - 4 for the TTL and 4 for hardcoded RDLENGTH
-        currentIndex += 8;
+        // move 8 bytes forward - 4 for the TTL and 2 for hardcoded RDLENGTH
+        currentIndex += 6;
         byte[] ip = new byte[4];
         System.arraycopy(arr, currentIndex, ip, 0, 4);
 

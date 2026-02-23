@@ -31,9 +31,9 @@ public class DNSForwarder {
                     .answers(List.of())
                     .build();
 
-            DNSMessage response = forwardSingleMessage(toForward);
+            Answer answer = forwardSingleMessage(toForward);
             // assumes a single answer since we send a single question
-            answers.add(response.getAnswers().getFirst());
+            answers.add(answer);
         }
 
         return new DNSMessage.Builder()
@@ -48,9 +48,10 @@ public class DNSForwarder {
                 .build();
     }
 
-    private DNSMessage forwardSingleMessage(DNSMessage message) {
+    private Answer forwardSingleMessage(DNSMessage message) {
 
-        DNSMessage response = null;
+        Answer answer = Answer.defaultAnswer(message.getQuestions().getFirst());
+
         try(DatagramSocket forwardSocket = new DatagramSocket()) {
             System.out.println("forwarding request for domain: " + message.getQuestions().getFirst());
 
@@ -64,14 +65,12 @@ public class DNSForwarder {
             forwardSocket.receive(forwardResponsePacket);
 
             System.out.println("received response from forwarding server");
-            response = DNSUtils.parsePacket(responseBuf, true);
-            for (Answer answer : response.getAnswers()) {
-                System.out.println("answer from forwarding DNS server: " + answer.resource());
-            }
+            answer = DNSUtils.parseAnswer(responseBuf);
+            System.out.println("answer from forwarding DNS server: " + answer.resource());
         } catch (IOException e) {
             System.out.println("exception while forwarding: " + e.getMessage());
         }
 
-        return response;
+        return answer;
     }
 }
