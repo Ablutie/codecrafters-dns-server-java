@@ -59,11 +59,12 @@ public class DNSForwarder {
             DatagramPacket forwardRequestPacket = new DatagramPacket(buf, buf.length, forwardingAddress, forwardingPort);
             forwardSocket.send(forwardRequestPacket);
 
-            DatagramPacket forwardResponsePacket = new DatagramPacket(buf, buf.length);
+            final byte[] responseBuf = new byte[512];
+            DatagramPacket forwardResponsePacket = new DatagramPacket(responseBuf, responseBuf.length);
             forwardSocket.receive(forwardResponsePacket);
 
             System.out.println("received response from forwarding server");
-            response = DNSUtils.parsePacket(buf, true);
+            response = DNSUtils.parsePacket(responseBuf, true);
             for (Answer answer : response.getAnswers()) {
                 System.out.println("answer from forwarding DNS server: " + answer.resource());
             }
