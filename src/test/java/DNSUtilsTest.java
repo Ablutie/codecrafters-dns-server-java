@@ -12,7 +12,7 @@ class DNSUtilsTest {
                 .parseHex("04 d2 22 10 00 01 00 00 00 00 00 00 "
                         + "0c 63 6f 64 65 63 72 61 66 74 65 72 73 02 69 6f 00");
 
-        DNSMessage request = DNSUtils.parsePacket(requestBytes, false);
+        DNSMessage request = DNSUtils.parsePacket(requestBytes);
         assertThat(request.getTransactionId()).isEqualTo((short) 1234);
         assertThat(request.getOpCode()).isEqualTo((byte) 4);
         assertThat(request.getQuestionCount()).isEqualTo(1);
@@ -27,7 +27,7 @@ class DNSUtilsTest {
                         + "0c 63 6f 64 65 63 72 61 66 74 65 72 73 02 69 6f 00 00 01 00 01 "
                         + "05 63 68 65 63 6b 0c 63 6f 64 65 63 72 61 66 74 65 72 73 02 69 6f 00 00 01 00 01");
 
-        DNSMessage request = DNSUtils.parsePacket(requestBytes, false);
+        DNSMessage request = DNSUtils.parsePacket(requestBytes);
         assertThat(request.getTransactionId()).isEqualTo((short) 1234);
         assertThat(request.getOpCode()).isEqualTo((byte) 4);
         assertThat(request.getQuestionCount()).isEqualTo(2);
@@ -43,7 +43,7 @@ class DNSUtilsTest {
                         + "0c 63 6f 64 65 63 72 61 66 74 65 72 73 02 69 6f 00 00 01 00 01 "
                         + "05 63 68 65 63 6b cc 00 00 01 00 01");
 
-        DNSMessage request = DNSUtils.parsePacket(requestBytes, false);
+        DNSMessage request = DNSUtils.parsePacket(requestBytes);
         assertThat(request.getTransactionId()).isEqualTo((short) 1234);
         assertThat(request.getOpCode()).isEqualTo((byte) 4);
         assertThat(request.getQuestionCount()).isEqualTo(2);
@@ -59,7 +59,7 @@ class DNSUtilsTest {
                         + "0c 63 6f 64 65 63 72 61 66 74 65 72 73 02 69 6f 00 00 01 00 01 "
                         + "05 63 68 65 63 6b cc 00 00 01 00 01");
 
-        DNSMessage request = DNSUtils.parsePacket(requestBytes, false);
+        DNSMessage request = DNSUtils.parsePacket(requestBytes);
         byte[] response = DNSUtils.dnsMessageToByteArray(request);
 
         assertThat(response[12]).isEqualTo((byte) 12);

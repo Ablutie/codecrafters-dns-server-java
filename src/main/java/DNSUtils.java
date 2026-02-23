@@ -6,7 +6,7 @@ import java.util.List;
 
 public class DNSUtils {
 
-    public static DNSMessage parsePacket(byte[] arr, boolean parseAnswer) {
+    public static DNSMessage parsePacket(byte[] arr) {
 
         // transaction id
         int transactionId = arr[0] & 0xFF;
@@ -84,14 +84,14 @@ public class DNSUtils {
         }
 
         // skip TYPE + CLASS - hardcoded to type A + class IN
-        currentIndex += 4;
+        currentIndex += 5;
 
         // TTL has the next 4 bytes
         byte[] ttl = new byte[4];
         System.arraycopy(arr, currentIndex, ttl, 0, 4);
 
-        // move 8 bytes forward - 4 for the TTL and 2 for hardcoded RDLENGTH
-        currentIndex += 6;
+        // move 12 bytes forward - 4 for the TTL and 2 for hardcoded RDLENGTH and 6 more determined empirically
+        currentIndex += 12;
         byte[] ip = new byte[4];
         System.arraycopy(arr, currentIndex, ip, 0, 4);
 

@@ -34,7 +34,7 @@ public class Main {
                 DNSForwarder forwarder = new DNSForwarder(InetAddress.getByName(forwardingAddress), forwardingPort);
 
                 boolean shouldParseAnswer = shouldForward(args);
-                DNSMessage request = DNSUtils.parsePacket(buf, false);
+                DNSMessage request = DNSUtils.parsePacket(buf);
                 for (String question : request.getQuestions()) {
                     System.out.println("Request contains question: " + question);
                 }
