@@ -34,8 +34,10 @@ public class DNSForwarder {
                     .build();
 
             DNSMessage answer = forwardSingleMessage(toForward);
-            // assumes a single answer since we send a single question
-            answers.add(answer.getAnswers().getFirst());
+            // assumes zero or a single answer since we send a single question
+            if (!(answer.getAnswers() == null) & !answer.getAnswers().isEmpty()) {
+                answers.add(answer.getAnswers().getFirst());
+            }
         }
 
         return new DNSMessage.Builder()
