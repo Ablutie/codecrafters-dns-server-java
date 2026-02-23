@@ -61,7 +61,9 @@ public class DNSUtils {
     public static Answer parseAnswer(byte[] arr) {
         StringBuilder domain = new StringBuilder();
 
-        int start = 12;
+        List<String> questions = parseQuestions(arr, 1);
+        int start = 12 + questions.getFirst().length() + 5;
+
         int wordLength = arr[start];
         int currentIndex = start + 1;
 
