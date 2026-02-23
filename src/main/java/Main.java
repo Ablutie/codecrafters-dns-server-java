@@ -2,6 +2,7 @@ import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
+import java.util.Arrays;
 
 public class Main {
 
@@ -16,9 +17,7 @@ public class Main {
                 System.out.println("Need to forward to address: " + args[1]);
                 String[] splitArgs = args[1].split(":");
                 forwardingPort = Integer.parseInt(splitArgs[1]);
-                System.out.println("forwading port: " + forwardingPort);
                 forwardingAddress = splitArgs[0];
-                System.out.println("forwading address: " + forwardingAddress);
             } else {
                 System.out.println("No need to forward");
             }
@@ -29,7 +28,7 @@ public class Main {
                 final byte[] buf = new byte[512];
                 final DatagramPacket packet = new DatagramPacket(buf, buf.length);
                 serverSocket.receive(packet);
-                System.out.println("Received data");
+                System.out.println("Received data: " + Arrays.toString(buf));
 
                 DNSForwarder forwarder = new DNSForwarder(InetAddress.getByName(forwardingAddress), forwardingPort);
 
