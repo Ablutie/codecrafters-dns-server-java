@@ -9,7 +9,7 @@ public class DNSMessage {
     private final int questionCount;
     private final int answerRecordCount;
 
-    private final List<String> questions;
+    private final List<Question> questions;
     private final List<Answer> answers;
 
     DNSMessage(Builder builder) {
@@ -54,7 +54,7 @@ public class DNSMessage {
         return answerRecordCount;
     }
 
-    public List<String> getQuestions() {
+    public List<Question> getQuestions() {
 
         return questions;
     }
@@ -71,7 +71,7 @@ public class DNSMessage {
         private boolean recursionDesired;
         private int questionCount;
         private int answerRecordCount;
-        private List<String> questions;
+        private List<Question> questions;
         private List<Answer> answers;
         
         public Builder transactionId(short transactionId) {
@@ -108,7 +108,7 @@ public class DNSMessage {
             return this;
         }
 
-        public Builder questions(List<String> questions) {
+        public Builder questions(List<Question> questions) {
             this.questions = questions;
             return this;
         }

@@ -18,9 +18,9 @@ public class Main {
                 String[] splitArgs = args[1].split(":");
                 forwardingPort = Integer.parseInt(splitArgs[1]);
                 forwardingAddress = splitArgs[0];
-            } else {
-                System.out.println("No need to forward");
             }
+        } else {
+            System.out.println("No need to forward, will echo request");
         }
 
         try (DatagramSocket serverSocket = new DatagramSocket(2053)) {
@@ -32,20 +32,20 @@ public class Main {
 
                 DNSForwarder forwarder = new DNSForwarder(InetAddress.getByName(forwardingAddress), forwardingPort);
 
-                boolean shouldParseAnswer = shouldForward(args);
                 DNSMessage request = DNSUtils.parsePacket(buf);
-                for (String question : request.getQuestions()) {
-                    System.out.println("Request contains question: " + question);
+                for (Question question : request.getQuestions()) {
+                    System.out.println("Request contains question: " + question.question());
                 }
 
                 byte[] bufResponse;
 
-                if (!shouldParseAnswer) {
-                    bufResponse = DNSUtils.dnsMessageToByteArray(request);
+                DNSMessage response;
+                if (!shouldForward(args)) {
+                    response = DNSUtils.echoMessage(request);
                 } else {
-                    DNSMessage response = forwarder.forwardMessage(request);
-                    bufResponse = DNSUtils.dnsMessageToByteArray(response);
+                    response = forwarder.forwardMessage(request);
                 }
+                bufResponse = DNSUtils.dnsMessageToByteArray(response);
 
                 final DatagramPacket packetResponse = new DatagramPacket(bufResponse, bufResponse.length,
                         packet.getSocketAddress());

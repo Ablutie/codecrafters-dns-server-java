@@ -20,7 +20,8 @@ public class DNSForwarder {
     public DNSMessage forwardMessage(DNSMessage message) {
 
         List<Answer> answers = new ArrayList<>();
-        for (String question : message.getQuestions()) {
+
+        for (Question question : message.getQuestions()) {
             DNSMessage toForward = new DNSMessage.Builder()
                     .transactionId(message.getTransactionId())
                     .queryIndicator(false)
@@ -32,9 +33,9 @@ public class DNSForwarder {
                     .answers(List.of())
                     .build();
 
-            Answer answer = forwardSingleMessage(toForward);
+            DNSMessage answer = forwardSingleMessage(toForward);
             // assumes a single answer since we send a single question
-            answers.add(answer);
+            answers.add(answer.getAnswers().getFirst());
         }
 
         return new DNSMessage.Builder()
@@ -49,9 +50,9 @@ public class DNSForwarder {
                 .build();
     }
 
-    private Answer forwardSingleMessage(DNSMessage message) {
+    private DNSMessage forwardSingleMessage(DNSMessage message) {
 
-        Answer answer = Answer.defaultAnswer(message.getQuestions().getFirst());
+//        Answer answer = Answer.defaultAnswer(message.getQuestions().getFirst().question());
 
         try(DatagramSocket forwardSocket = new DatagramSocket()) {
             System.out.println("forwarding request for domain: " + message.getQuestions().getFirst());
@@ -66,14 +67,17 @@ public class DNSForwarder {
             forwardSocket.receive(forwardResponsePacket);
 
             System.out.println("raw forwarding server response: " + Arrays.toString(responseBuf));
-            answer = DNSUtils.parseAnswer(responseBuf);
-            System.out.println("resource from forwarding DNS server: " + answer.resource());
-            System.out.println("ttl from forwarding DNS server: " + Arrays.toString(answer.ttl()));
-            System.out.println("ip from forwarding DNS server: " + Arrays.toString(answer.ip()));
+            DNSMessage answer = DNSUtils.parsePacket(responseBuf);
+            Answer reply = answer.getAnswers().getFirst();
+            System.out.println("resource from forwarding DNS server: " + reply.resource());
+            System.out.println("ttl from forwarding DNS server: " + Arrays.toString(reply.ttl()));
+            System.out.println("ip from forwarding DNS server: " + Arrays.toString(reply.ip()));
+
+            return answer;
         } catch (IOException e) {
             System.out.println("exception while forwarding: " + e.getMessage());
         }
 
-        return answer;
+        return null;
     }
 }
