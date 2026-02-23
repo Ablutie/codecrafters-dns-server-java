@@ -52,8 +52,6 @@ public class DNSForwarder {
 
     private DNSMessage forwardSingleMessage(DNSMessage message) {
 
-//        Answer answer = Answer.defaultAnswer(message.getQuestions().getFirst().question());
-
         try(DatagramSocket forwardSocket = new DatagramSocket()) {
             System.out.println("forwarding request for domain: " + message.getQuestions().getFirst());
 
@@ -68,10 +66,16 @@ public class DNSForwarder {
 
             System.out.println("raw forwarding server response: " + Arrays.toString(responseBuf));
             DNSMessage answer = DNSUtils.parsePacket(responseBuf);
-            Answer reply = answer.getAnswers().getFirst();
-            System.out.println("resource from forwarding DNS server: " + reply.resource());
-            System.out.println("ttl from forwarding DNS server: " + Arrays.toString(reply.ttl()));
-            System.out.println("ip from forwarding DNS server: " + Arrays.toString(reply.ip()));
+            List<Answer> replies = answer.getAnswers();
+            if (replies != null && !replies.isEmpty()) {
+                Answer reply = replies.getFirst();
+                System.out.println("resource from forwarding DNS server: " + reply.resource());
+                System.out.println("ttl from forwarding DNS server: " + Arrays.toString(reply.ttl()));
+                System.out.println("ip from forwarding DNS server: " + Arrays.toString(reply.ip()));
+            } else {
+                System.out.println("No answers from server");
+            }
+
 
             return answer;
         } catch (IOException e) {
