@@ -64,7 +64,7 @@ public class DNSForwarder {
             DatagramPacket forwardResponsePacket = new DatagramPacket(responseBuf, responseBuf.length);
             forwardSocket.receive(forwardResponsePacket);
 
-            System.out.println("raw forwarding server response: " + Arrays.toString(responseBuf));
+            System.out.println("buffer for forwarding server response: " + Arrays.toString(responseBuf));
             DNSMessage answer = DNSUtils.parsePacket(responseBuf);
             List<Answer> replies = answer.getAnswers();
             if (replies != null && !replies.isEmpty()) {
