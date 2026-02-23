@@ -92,8 +92,8 @@ public class DNSUtils {
         byte[] ttl = new byte[4];
         System.arraycopy(arr, currentIndex, ttl, 0, 4);
 
-        // move 12 bytes forward - 4 for the TTL and 2 for hardcoded RDLENGTH and 6 more determined empirically
-        currentIndex += 12;
+        // move 6 bytes forward - 4 for the TTL and 2 for hardcoded RDLENGTH
+        currentIndex += 6;
         byte[] ip = new byte[4];
         System.arraycopy(arr, currentIndex, ip, 0, 4);
 
